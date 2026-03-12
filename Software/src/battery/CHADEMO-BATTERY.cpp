@@ -253,7 +253,7 @@ void ChademoBattery::process_vehicle_charging_limits(CAN_frame rx_frame) {
   };
 
   x200_discharge_limits.MaximumDischargeCurrent = rx_frame.data.u8[0];
-  x200_discharge_limits.MinimumDischargeVoltage = ((rx_frame.data.u8[4] << 8) | rx_frame.data.u8[5]);
+  x200_discharge_limits.MinimumDischargeVoltage = ((rx_frame.data.u8[4] << 8) | rx_frame.data.u8[5]) / 100.0f;
   x200_discharge_limits.MinimumBatteryDischargeLevel = rx_frame.data.u8[6];
   x200_discharge_limits.MaxRemainingCapacityForCharging = rx_frame.data.u8[7];
 
@@ -267,8 +267,8 @@ void ChademoBattery::process_vehicle_charging_limits(CAN_frame rx_frame) {
   */
 
   if (get_voltage_handler() <= x200_discharge_limits.MinimumDischargeVoltage && CHADEMO_Status > CHADEMO_NEGOTIATE) {
-    logStream << "x200 minimum discharge voltage met or exceeded, stopping. "
-              << "Measured: " << get_voltage_handler() << "V"
+    logStream << "x200 minimum discharge voltage met or exceeded, stopping.\n"
+              << "Measured: " << get_voltage_handler() << "V\n"
               << "Minimum voltage: " << x200_discharge_limits.MinimumDischargeVoltage << "V\n";
     CHADEMO_Status = CHADEMO_STOP;
   }
