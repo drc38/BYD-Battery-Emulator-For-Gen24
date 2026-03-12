@@ -113,7 +113,7 @@ void ChademoBattery::process_vehicle_charging_session(CAN_frame rx_frame) {
   auto flushLog = [&]() {
     std::string msg = logStream.str();
     if (!msg.empty() && msg != lastLogMessage) {
-      DEBUG_PRINTLN(msg);
+      DEBUG_PRINTLN(msg.c_str());
       lastLogMessage = msg;
     }
   };
@@ -247,7 +247,7 @@ void ChademoBattery::process_vehicle_charging_limits(CAN_frame rx_frame) {
   auto flushLog = [&]() {
     std::string msg = logStream.str();
     if (!msg.empty() && msg != lastLogMessage) {
-      DEBUG_PRINTLN(msg);
+      DEBUG_PRINTLN(msg.c_str());
       lastLogMessage = msg;
     }
   };
@@ -285,7 +285,7 @@ void ChademoBattery::process_vehicle_discharge_estimate(CAN_frame rx_frame) {
   auto flushLog = [&]() {
     std::string msg = logStream.str();
     if (!msg.empty() && msg != lastLogMessage) {
-      DEBUG_PRINTLN(msg);
+      DEBUG_PRINTLN(msg.c_str());
       lastLogMessage = msg;
     }
   };
@@ -606,7 +606,7 @@ void ChademoBattery::transmit_can(unsigned long currentMillis) {
   auto flushTransmitLog = [&]() {
     std::string msg = transmitLogStream.str();
     if (!msg.empty() && msg != lastTransmitLog) {
-      DEBUG_PRINTLN(msg);
+      DEBUG_PRINTLN(msg.c_str());
       lastTransmitLog = msg;
     }
   };
