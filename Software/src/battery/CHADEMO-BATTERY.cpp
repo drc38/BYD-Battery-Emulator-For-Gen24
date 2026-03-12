@@ -1,10 +1,10 @@
 #include "CHADEMO-BATTERY.h"
+#include <sstream>
 #include "../datalayer/datalayer.h"
 #include "../devboard/utils/events.h"
 #include "CHADEMO-CT.h"
 #include "CHADEMO-SHUNTS.h"
 #include "Shunt.h"
-#include <sstream>
 
 float (*get_measured_current_ptr)();
 float (*get_measured_voltage_ptr)();
@@ -229,7 +229,7 @@ void ChademoBattery::process_vehicle_charging_session(CAN_frame rx_frame) {
   }
 
   if (vehicle_permission && evse_permission && CHADEMO_Status == CHADEMO_POWERFLOW) {
-    logStream << "updating vehicle request in process_vehicle_charging_session()\n";
+    logStream << "Updating vehicle request in process_vehicle_charging_session()\n";
     flushLog();
     return;
   }
@@ -299,7 +299,8 @@ void ChademoBattery::process_vehicle_discharge_estimate(CAN_frame rx_frame) {
   if (currentMillis - previousMillis5000 >= INTERVAL_5_S) {
     previousMillis5000 = currentMillis;
     logStream << "x201 available vehicle energy: " << x201_discharge_estimate.AvailableVehicleEnergy << "kWh";
-    logStream << "x201 approx vehicle completion time: " << x201_discharge_estimate.ApproxDischargeCompletionTime << "\n";
+    logStream << "x201 approx vehicle completion time: " << x201_discharge_estimate.ApproxDischargeCompletionTime
+              << "\n";
   }
 
   flushLog();
@@ -801,7 +802,8 @@ void ChademoBattery::handle_chademo_sequence() {
                      }
        */
       if (x102_chg_session.s.status.StatusVehicleChargingEnabled) {
-        if (get_voltage_handler() < 20) {
+        // ignore voltage check if using a CT clamp, as we don't have a voltage reading
+        if (get_voltage_handler() < 20 || user_selected_shunt_type == ShuntType::CustomClamp) {
 
           digitalWrite(pin10, HIGH);
           evse_permission = true;
