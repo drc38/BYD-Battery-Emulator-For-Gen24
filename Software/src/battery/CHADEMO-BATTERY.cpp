@@ -218,9 +218,9 @@ void ChademoBattery::process_vehicle_charging_session(CAN_frame rx_frame) {
   }
 
   // TODO this and the next stanza influence state/control
-  //  and probably don't belong in this function
+  // and probably don't belong in this function
   // consider relocating
-  if (vehicle_permission && CHADEMO_Status == CHADEMO_EVSE_PREPARE && priorTargetBatteryVoltage == 0 &&
+  if (vehicle_permission && CHADEMO_Status == CHADEMO_EVSE_PREPARE  &&
       newTargetBatteryVoltage > 0 && x102_chg_session.s.status.StatusVehicleChargingEnabled) {
     logStream << "STATE SHIFT to EVSE_START reached in process_vehicle_charging_session()\n";
     CHADEMO_Status = CHADEMO_EVSE_START;
@@ -693,21 +693,22 @@ void ChademoBattery::handle_chademo_sequence() {
   static std::string lastLogMessage;
   std::ostringstream logStream;
 
-  precharge_low = digitalRead(precharge) == LOW;
-  positive_high = digitalRead(positive_contactor) == HIGH;
-  contactors_ready = precharge_low && positive_high;
-
   vehicle_permission = digitalRead(pin4);
 
   /* -------------------    State override conditions checks	------------------- */
   /* ------------------------------------------------------------------------------ */
+  if (CHADEMO_Status >= CHADEMO_EV_ALLOWED && x102_chg_session.s.status.StatusNormalStopRequest) {
+    logStream << "Vehicle charging stop requested, STOP.\n";
+    CHADEMO_Status = CHADEMO_STOP;
+  }
+  
   if (CHADEMO_Status >= CHADEMO_EV_ALLOWED && x102_chg_session.s.status.StatusVehicleShifterPosition) {
-    logStream << "Vehicle is not parked, abort.\n";
+    logStream << "Vehicle is not parked, STOP.\n";
     CHADEMO_Status = CHADEMO_STOP;
   }
 
   if (CHADEMO_Status >= CHADEMO_EV_ALLOWED && !vehicle_permission) {
-    logStream << "Vehicle charge/discharge permission ended, stop.\n";
+    logStream << "Vehicle charge/discharge permission ended, STOP.\n";
     CHADEMO_Status = CHADEMO_STOP;
   }
 
@@ -841,7 +842,8 @@ void ChademoBattery::handle_chademo_sequence() {
       logStream << "CHADEMO_EVSE_CONTACTORS State\n";
 
       /* check whether contactors ready, because externally dependent upon inverter allow during discharge */
-      if (contactors_ready) {
+      // contactors are closed when 0, open when 1
+      if (!x102_chg_session.s.status.StatusVehicle) {
         logStream << "Contactors ready\n";
         logStream << "Voltage: " << get_voltage_handler() << "V\n";
         /* transition to POWERFLOW state if discharge compatible on both sides */
@@ -908,7 +910,7 @@ void ChademoBattery::handle_chademo_sequence() {
        * We will re-enter the handler until the amperage drops sufficiently
        * and then transition to CHADEMO_IDLE
        */
-      if (get_measured_current_ptr() <= 5 && get_voltage_handler() <= 10) {
+      if (get_measured_current_ptr() <= 2) {
         /* welding detection ideally here */
         digitalWrite(pin10, LOW);
         digitalWrite(pin2, LOW);
